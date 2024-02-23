@@ -38,13 +38,27 @@
 				"inputs": [
 					{
 						"referenceName": "OnpremDatabase",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaname": "dbo",
+							"tablename": {
+								"value": "@pipeline().parameters.sourcetable",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"outputs": [
 					{
 						"referenceName": "OnpremDatabase",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaname": "dbo",
+							"tablename": {
+								"value": "@pipeline().parameters.targettable",
+								"type": "Expression"
+							}
+						}
 					}
 				]
 			}
