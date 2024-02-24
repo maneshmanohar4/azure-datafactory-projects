@@ -1,0 +1,68 @@
+{
+	"name": "Simple Load CSV to Table",
+	"properties": {
+		"activities": [
+			{
+				"name": "CSV to SQL Table",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "SqlServerSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DatalakeCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"containername": "azuredatastore",
+							"foldername": "seq1",
+							"filename": "customers_1.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Bikestore_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"tablename": "customer"
+						}
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
