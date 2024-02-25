@@ -46,9 +46,18 @@
 						"referenceName": "DatalakeCSV",
 						"type": "DatasetReference",
 						"parameters": {
-							"containername": "azuredatastore",
-							"foldername": "loaddata",
-							"filename": "customers.csv"
+							"containername": {
+								"value": "@pipeline().globalParameters.containername",
+								"type": "Expression"
+							},
+							"foldername": {
+								"value": "@pipeline().parameters.foldername",
+								"type": "Expression"
+							},
+							"filename": {
+								"value": "@pipeline().parameters.filename",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -57,12 +66,29 @@
 						"referenceName": "Bikestore_dataset",
 						"type": "DatasetReference",
 						"parameters": {
-							"tablename": "customer"
+							"tablename": {
+								"value": "@pipeline().parameters.tablename",
+								"type": "Expression"
+							}
 						}
 					}
 				]
 			}
 		],
+		"parameters": {
+			"filename": {
+				"type": "string",
+				"defaultValue": "customers.csv"
+			},
+			"tablename": {
+				"type": "string",
+				"defaultValue": "customers"
+			},
+			"foldername": {
+				"type": "string",
+				"defaultValue": "loaddata"
+			}
+		},
 		"annotations": []
 	}
 }
