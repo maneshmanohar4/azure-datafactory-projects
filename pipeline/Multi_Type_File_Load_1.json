@@ -106,8 +106,56 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "SqlServerSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false
+										},
 										"enableStaging": false
-									}
+									},
+									"inputs": [
+										{
+											"referenceName": "DatalakeJSON",
+											"type": "DatasetReference",
+											"parameters": {
+												"containername": {
+													"value": "@pipeline().globalParameters.containername",
+													"type": "Expression"
+												},
+												"foldername": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@concat(pipeline().parameters.filename,'.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Bikestore_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"tablename": {
+													"value": "@pipeline().parameters.filename",
+													"type": "Expression"
+												}
+											}
+										}
+									]
 								}
 							]
 						}
