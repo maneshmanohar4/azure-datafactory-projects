@@ -111,7 +111,14 @@
 											"storeSettings": {
 												"type": "AzureBlobFSReadSettings",
 												"recursive": true,
-												"wildcardFileName": "*.json",
+												"wildcardFolderPath": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"wildcardFileName": {
+													"value": "@concat(pipeline().parameters.filename,'.json')",
+													"type": "Expression"
+												},
 												"enablePartitionDiscovery": false
 											},
 											"formatSettings": {
@@ -128,21 +135,7 @@
 									"inputs": [
 										{
 											"referenceName": "DatalakeJSON",
-											"type": "DatasetReference",
-											"parameters": {
-												"containername": {
-													"value": "@pipeline().globalParameters.containername",
-													"type": "Expression"
-												},
-												"foldername": {
-													"value": "@pipeline().parameters.foldername",
-													"type": "Expression"
-												},
-												"filename": {
-													"value": "@concat(pipeline().parameters.filename,'.json')",
-													"type": "Expression"
-												}
-											}
+											"type": "DatasetReference"
 										}
 									],
 									"outputs": [
