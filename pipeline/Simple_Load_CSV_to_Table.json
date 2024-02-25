@@ -47,8 +47,8 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"containername": "azuredatastore",
-							"foldername": "seq1",
-							"filename": "customers_1.csv"
+							"foldername": "loaddata",
+							"filename": "customers.csv"
 						}
 					}
 				],
