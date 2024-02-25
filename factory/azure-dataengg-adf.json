@@ -1,0 +1,12 @@
+{
+	"name": "azure-dataengg-adf",
+	"properties": {
+		"globalParameters": {
+			"containername": {
+				"type": "string",
+				"value": "azuredatastore"
+			}
+		}
+	},
+	"location": "southindia"
+}
