@@ -135,7 +135,21 @@
 									"inputs": [
 										{
 											"referenceName": "DatalakeJSON",
-											"type": "DatasetReference"
+											"type": "DatasetReference",
+											"parameters": {
+												"containername": {
+													"value": "@pipeline().globalParameters.containername",
+													"type": "Expression"
+												},
+												"foldername": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@concat(pipeline().parameters.filename,'.csv')",
+													"type": "Expression"
+												}
+											}
 										}
 									],
 									"outputs": [
