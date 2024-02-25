@@ -610,7 +610,14 @@
 													"storeSettings": {
 														"type": "AzureBlobFSReadSettings",
 														"recursive": true,
-														"wildcardFileName": "*.json",
+														"wildcardFolderPath": {
+															"value": "@pipeline().parameters.foldername",
+															"type": "Expression"
+														},
+														"wildcardFileName": {
+															"value": "@concat(pipeline().parameters.filename,'.json')",
+															"type": "Expression"
+														},
 														"enablePartitionDiscovery": false
 													},
 													"formatSettings": {
@@ -638,7 +645,7 @@
 															"type": "Expression"
 														},
 														"filename": {
-															"value": "@concat(pipeline().parameters.filename,'.json')",
+															"value": "@concat(pipeline().parameters.filename,'.csv')",
 															"type": "Expression"
 														}
 													}
