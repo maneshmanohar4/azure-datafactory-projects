@@ -119,7 +119,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"containername": {
-											"value": "@pipeline().parameters.containername",
+											"value": "@pipeline().globalParameters.containername",
 											"type": "Expression"
 										},
 										"foldername": {
@@ -154,10 +154,6 @@
 			"metadata_table": {
 				"type": "string",
 				"defaultValue": "metadata_details"
-			},
-			"containername": {
-				"type": "string",
-				"defaultValue": "azuredatastore"
 			},
 			"foldername": {
 				"type": "string",
