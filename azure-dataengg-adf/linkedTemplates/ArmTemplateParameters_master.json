@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "azure-dataengg-adf"
+		},
+		"azuredatastore_accountKey": {
+			"value": ""
+		},
+		"onpremssqlerver_connectionString": {
+			"value": "Integrated Security=True;Data Source=MANESH-BOOK3-PR;Initial Catalog=Bikestore"
+		},
+		"onpremssqlerver_password": {
+			"value": ""
+		},
+		"azuredatastore_properties_typeProperties_url": {
+			"value": "https://dataenggstore.dfs.core.windows.net/"
+		},
+		"onpremssqlerver_properties_typeProperties_userName": {
+			"value": "MANESH-BOOK3-PR\\manes"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

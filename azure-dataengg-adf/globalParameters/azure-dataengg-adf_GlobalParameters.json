@@ -1,0 +1,6 @@
+{
+	"containername": {
+		"type": "string",
+		"value": "azuredatastore"
+	}
+}
