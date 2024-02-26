@@ -146,7 +146,7 @@
 													"type": "Expression"
 												},
 												"filename": {
-													"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.csv')",
+													"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.json')",
 													"type": "Expression"
 												}
 											}
