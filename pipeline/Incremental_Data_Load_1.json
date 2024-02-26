@@ -198,7 +198,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'')",
+								"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
 								"type": "Expression"
 							}
 						}
