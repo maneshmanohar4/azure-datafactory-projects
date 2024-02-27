@@ -57,16 +57,16 @@
 							"value": "@pipeline().globalParameters.containername",
 							"type": "Expression"
 						},
-						"foldername": {
-							"value": "@pipeline().parameters.foldername",
+						"storageaccount": {
+							"value": "@pipeline().globalParameters.storageaccount",
 							"type": "Expression"
 						},
 						"filename": {
-							"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.',pipeline().parameters.filetype)",
+							"value": "@concat(pipeline().parameters.foldername,'/',pipeline().parameters.filename,'.',pipeline().parameters.filetype)",
 							"type": "Expression"
 						},
-						"storageaccount": {
-							"value": "@pipeline().globalParameters.storageaccount",
+						"tablename": {
+							"value": "@pipeline().parameters.filename",
 							"type": "Expression"
 						}
 					}
