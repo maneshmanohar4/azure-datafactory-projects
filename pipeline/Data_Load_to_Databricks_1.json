@@ -1,0 +1,103 @@
+{
+	"name": "Data_Load_to_Databricks_1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Update Sequence",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Data Load Notebook",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "onpremssqlerver",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Data Load Notebook",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Repos/maneshmanohar4@gmail.com/azure-databricks-projects/main_script",
+					"baseParameters": {
+						"filetype": {
+							"value": "@pipeline().parameters.filetype",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.filename",
+							"type": "Expression"
+						},
+						"sequence": {
+							"value": "@string(pipeline().parameters.sequence)",
+							"type": "Expression"
+						},
+						"containername": {
+							"value": "@pipeline().globalParameters.containername",
+							"type": "Expression"
+						},
+						"foldername": {
+							"value": "@pipeline().parameters.foldername",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "databricks",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"filetype": {
+				"type": "string"
+			},
+			"filename": {
+				"type": "string"
+			},
+			"foldername": {
+				"type": "string"
+			},
+			"sequence": {
+				"type": "int"
+			},
+			"table_id": {
+				"type": "int"
+			}
+		},
+		"annotations": []
+	}
+}
