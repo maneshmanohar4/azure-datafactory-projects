@@ -8,6 +8,9 @@
 		"azuredatastore_accountKey": {
 			"value": ""
 		},
+		"databricks_accessToken": {
+			"value": ""
+		},
 		"onpremssqlerver_connectionString": {
 			"value": "Integrated Security=True;Data Source=MANESH-BOOK3-PR;Initial Catalog=Bikestore"
 		},
@@ -16,6 +19,9 @@
 		},
 		"azuredatastore_properties_typeProperties_url": {
 			"value": "https://dataenggstore.dfs.core.windows.net/"
+		},
+		"databricks_properties_typeProperties_existingClusterId": {
+			"value": "0224-053152-7u3xf8fe"
 		},
 		"onpremssqlerver_properties_typeProperties_userName": {
 			"value": "MANESH-BOOK3-PR\\manes"

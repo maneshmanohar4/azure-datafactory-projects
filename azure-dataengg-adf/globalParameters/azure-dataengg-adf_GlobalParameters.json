@@ -2,5 +2,9 @@
 	"containername": {
 		"type": "string",
 		"value": "azuredatastore"
+	},
+	"storageaccount": {
+		"type": "string",
+		"value": "dataenggstore"
 	}
 }

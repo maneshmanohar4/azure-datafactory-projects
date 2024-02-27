@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'azuredatastore'"
 		},
+		"databricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'databricks'"
+		},
 		"onpremssqlerver_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'onpremssqlerver'",
@@ -23,6 +27,10 @@
 		"azuredatastore_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dataenggstore.dfs.core.windows.net/"
+		},
+		"databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0224-053152-7u3xf8fe"
 		},
 		"onpremssqlerver_properties_typeProperties_userName": {
 			"type": "string",
@@ -46,6 +54,24 @@
 						"type": "SecureString",
 						"value": "[parameters('azuredatastore_accountKey')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/databricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-1661961612796027.7.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('databricks_accessToken')]"
+					},
+					"existingClusterId": "[parameters('databricks_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": []
@@ -167,6 +193,114 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Data_Load_to_Databricks_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Update Sequence",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Data Load Notebook",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "onpremssqlerver",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Data Load Notebook",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/maneshmanohar4@gmail.com/azure-databricks-projects/main_script",
+							"baseParameters": {
+								"containername": {
+									"value": "@pipeline().globalParameters.containername",
+									"type": "Expression"
+								},
+								"storageaccount": {
+									"value": "@pipeline().globalParameters.storageaccount",
+									"type": "Expression"
+								},
+								"filename": {
+									"value": "@concat(pipeline().parameters.foldername,'/',pipeline().parameters.filename,'.',pipeline().parameters.filetype)",
+									"type": "Expression"
+								},
+								"tablename": {
+									"value": "@pipeline().parameters.filename",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"filetype": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					},
+					"foldername": {
+						"type": "string"
+					},
+					"sequence": {
+						"type": "int"
+					},
+					"table_id": {
+						"type": "int"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]",
+				"[concat(variables('factoryId'), '/linkedServices/databricks')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Bikestore_dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -193,6 +327,386 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Data_Load_to_Databricks')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fetching Metadata",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "Bikestore_dataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"tablename": {
+										"value": "@pipeline().parameters.metadata_table",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filtering Enabled Tables",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Fetching Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Fetching Metadata').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().is_enabled,1)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Foreach Enabled File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filtering Enabled Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filtering Enabled Tables').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Multi File Incremental Loader",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Data_Load_to_Databricks_1",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"filetype": {
+												"value": "@item().filetype",
+												"type": "Expression"
+											},
+											"filename": {
+												"value": "@item().filename",
+												"type": "Expression"
+											},
+											"foldername": {
+												"value": "@pipeline().parameters.foldername",
+												"type": "Expression"
+											},
+											"sequence": {
+												"value": "@item().sequence",
+												"type": "Expression"
+											},
+											"table_id": {
+												"value": "@item().table_id",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadata_table": {
+						"type": "string",
+						"defaultValue": "metadata_details"
+					},
+					"foldername": {
+						"type": "string",
+						"defaultValue": "loaddata"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
+				"[concat(variables('factoryId'), '/pipelines/Data_Load_to_Databricks_1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Incremental_Data_Load_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "File Type Selector",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.filetype",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "csv",
+									"activities": [
+										{
+											"name": "CSV Loader",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "DelimitedTextSource",
+													"storeSettings": {
+														"type": "AzureBlobFSReadSettings",
+														"recursive": true,
+														"enablePartitionDiscovery": false
+													},
+													"formatSettings": {
+														"type": "DelimitedTextReadSettings"
+													}
+												},
+												"sink": {
+													"type": "SqlServerSink",
+													"writeBehavior": "insert",
+													"sqlWriterUseTableLock": false
+												},
+												"enableStaging": false,
+												"translator": {
+													"type": "TabularTranslator",
+													"typeConversion": true,
+													"typeConversionSettings": {
+														"allowDataTruncation": true,
+														"treatBooleanAsNumber": false
+													}
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "DatalakeCSV",
+													"type": "DatasetReference",
+													"parameters": {
+														"containername": {
+															"value": "@pipeline().globalParameters.containername",
+															"type": "Expression"
+														},
+														"foldername": {
+															"value": "@pipeline().parameters.foldername",
+															"type": "Expression"
+														},
+														"filename": {
+															"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.csv')",
+															"type": "Expression"
+														}
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "Bikestore_dataset",
+													"type": "DatasetReference",
+													"parameters": {
+														"tablename": {
+															"value": "@pipeline().parameters.filename",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										}
+									]
+								},
+								{
+									"value": "json",
+									"activities": [
+										{
+											"name": "JSON Loader",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "JsonSource",
+													"storeSettings": {
+														"type": "AzureBlobFSReadSettings",
+														"recursive": true,
+														"wildcardFolderPath": {
+															"value": "@concat(pipeline().globalParameters.containername,'/',pipeline().parameters.foldername)",
+															"type": "Expression"
+														},
+														"wildcardFileName": {
+															"value": "@concat(pipeline().parameters.filename,'.json')",
+															"type": "Expression"
+														},
+														"enablePartitionDiscovery": false
+													},
+													"formatSettings": {
+														"type": "JsonReadSettings"
+													}
+												},
+												"sink": {
+													"type": "SqlServerSink",
+													"writeBehavior": "insert",
+													"sqlWriterUseTableLock": false
+												},
+												"enableStaging": false
+											},
+											"inputs": [
+												{
+													"referenceName": "DatalakeJSON",
+													"type": "DatasetReference",
+													"parameters": {
+														"containername": {
+															"value": "@pipeline().globalParameters.containername",
+															"type": "Expression"
+														},
+														"foldername": {
+															"value": "@pipeline().parameters.foldername",
+															"type": "Expression"
+														},
+														"filename": {
+															"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.json')",
+															"type": "Expression"
+														}
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "Bikestore_dataset",
+													"type": "DatasetReference",
+													"parameters": {
+														"tablename": {
+															"value": "@pipeline().parameters.filename",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Update Sequence",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "File Type Selector",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "onpremssqlerver",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"filetype": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					},
+					"foldername": {
+						"type": "string"
+					},
+					"sequence": {
+						"type": "int"
+					},
+					"table_id": {
+						"type": "int"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]",
+				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]",
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/DatalakeJSON')]"
 			]
 		},
 		{
@@ -670,190 +1184,15 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Incremental_Data_Load_1')]",
+			"name": "[concat(parameters('factoryName'), '/Incremental_Data_Load')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "File Type Selector",
-						"type": "Switch",
+						"name": "Fetching Metadata",
+						"type": "Lookup",
 						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"on": {
-								"value": "@pipeline().parameters.filetype",
-								"type": "Expression"
-							},
-							"cases": [
-								{
-									"value": "csv",
-									"activities": [
-										{
-											"name": "CSV Loader",
-											"type": "Copy",
-											"dependsOn": [],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"source": {
-													"type": "DelimitedTextSource",
-													"storeSettings": {
-														"type": "AzureBlobFSReadSettings",
-														"recursive": true,
-														"enablePartitionDiscovery": false
-													},
-													"formatSettings": {
-														"type": "DelimitedTextReadSettings"
-													}
-												},
-												"sink": {
-													"type": "SqlServerSink",
-													"writeBehavior": "insert",
-													"sqlWriterUseTableLock": false
-												},
-												"enableStaging": false,
-												"translator": {
-													"type": "TabularTranslator",
-													"typeConversion": true,
-													"typeConversionSettings": {
-														"allowDataTruncation": true,
-														"treatBooleanAsNumber": false
-													}
-												}
-											},
-											"inputs": [
-												{
-													"referenceName": "DatalakeCSV",
-													"type": "DatasetReference",
-													"parameters": {
-														"containername": {
-															"value": "@pipeline().globalParameters.containername",
-															"type": "Expression"
-														},
-														"foldername": {
-															"value": "@pipeline().parameters.foldername",
-															"type": "Expression"
-														},
-														"filename": {
-															"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.csv')",
-															"type": "Expression"
-														}
-													}
-												}
-											],
-											"outputs": [
-												{
-													"referenceName": "Bikestore_dataset",
-													"type": "DatasetReference",
-													"parameters": {
-														"tablename": {
-															"value": "@pipeline().parameters.filename",
-															"type": "Expression"
-														}
-													}
-												}
-											]
-										}
-									]
-								},
-								{
-									"value": "json",
-									"activities": [
-										{
-											"name": "JSON Loader",
-											"type": "Copy",
-											"dependsOn": [],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"source": {
-													"type": "JsonSource",
-													"storeSettings": {
-														"type": "AzureBlobFSReadSettings",
-														"recursive": true,
-														"wildcardFolderPath": {
-															"value": "@concat(pipeline().globalParameters.containername,'/',pipeline().parameters.foldername)",
-															"type": "Expression"
-														},
-														"wildcardFileName": {
-															"value": "@concat(pipeline().parameters.filename,'.json')",
-															"type": "Expression"
-														},
-														"enablePartitionDiscovery": false
-													},
-													"formatSettings": {
-														"type": "JsonReadSettings"
-													}
-												},
-												"sink": {
-													"type": "SqlServerSink",
-													"writeBehavior": "insert",
-													"sqlWriterUseTableLock": false
-												},
-												"enableStaging": false
-											},
-											"inputs": [
-												{
-													"referenceName": "DatalakeJSON",
-													"type": "DatasetReference",
-													"parameters": {
-														"containername": {
-															"value": "@pipeline().globalParameters.containername",
-															"type": "Expression"
-														},
-														"foldername": {
-															"value": "@pipeline().parameters.foldername",
-															"type": "Expression"
-														},
-														"filename": {
-															"value": "@concat(pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.json')",
-															"type": "Expression"
-														}
-													}
-												}
-											],
-											"outputs": [
-												{
-													"referenceName": "Bikestore_dataset",
-													"type": "DatasetReference",
-													"parameters": {
-														"tablename": {
-															"value": "@pipeline().parameters.filename",
-															"type": "Expression"
-														}
-													}
-												}
-											]
-										}
-									]
-								}
-							]
-						}
-					},
-					{
-						"name": "Update Sequence",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "File Type Selector",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -862,21 +1201,105 @@
 							"secureInput": false
 						},
 						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "onpremssqlerver",
-							"type": "LinkedServiceReference"
-						},
 						"typeProperties": {
-							"scripts": [
-								{
-									"type": "Query",
-									"text": {
-										"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "Bikestore_dataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"tablename": {
+										"value": "@pipeline().parameters.metadata_table",
 										"type": "Expression"
 									}
 								}
-							],
-							"scriptBlockExecutionTimeout": "02:00:00"
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filtering Enabled Tables",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Fetching Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Fetching Metadata').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().is_enabled,1)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Foreach Enabled File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filtering Enabled Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filtering Enabled Tables').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Multi File Incremental Loader",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Incremental_Data_Load_1",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"filetype": {
+												"value": "@item().filetype",
+												"type": "Expression"
+											},
+											"filename": {
+												"value": "@item().filename",
+												"type": "Expression"
+											},
+											"foldername": {
+												"value": "@pipeline().parameters.foldername",
+												"type": "Expression"
+											},
+											"sequence": {
+												"value": "@item().sequence",
+												"type": "Expression"
+											},
+											"table_id": {
+												"value": "@item().table_id",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
 						}
 					}
 				],
@@ -884,29 +1307,20 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"filetype": {
-						"type": "string"
-					},
-					"filename": {
-						"type": "string"
+					"metadata_table": {
+						"type": "string",
+						"defaultValue": "metadata_details"
 					},
 					"foldername": {
-						"type": "string"
-					},
-					"sequence": {
-						"type": "int"
-					},
-					"table_id": {
-						"type": "int"
+						"type": "string",
+						"defaultValue": "loaddata"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]",
-				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]",
 				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/DatalakeJSON')]"
+				"[concat(variables('factoryId'), '/pipelines/Incremental_Data_Load_1')]"
 			]
 		},
 		{
@@ -1039,147 +1453,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
 				"[concat(variables('factoryId'), '/pipelines/Multi_Type_File_Load_1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Incremental_Data_Load')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Fetching Metadata",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "Bikestore_dataset",
-								"type": "DatasetReference",
-								"parameters": {
-									"tablename": {
-										"value": "@pipeline().parameters.metadata_table",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "Filtering Enabled Tables",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "Fetching Metadata",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Fetching Metadata').output.value",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@equals(item().is_enabled,1)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Foreach Enabled File",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Filtering Enabled Tables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Filtering Enabled Tables').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "Multi File Incremental Loader",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "Incremental_Data_Load_1",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"filetype": {
-												"value": "@item().filetype",
-												"type": "Expression"
-											},
-											"filename": {
-												"value": "@item().filename",
-												"type": "Expression"
-											},
-											"foldername": {
-												"value": "@pipeline().parameters.foldername",
-												"type": "Expression"
-											},
-											"sequence": {
-												"value": "@item().sequence",
-												"type": "Expression"
-											},
-											"table_id": {
-												"value": "@item().table_id",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"metadata_table": {
-						"type": "string",
-						"defaultValue": "metadata_details"
-					},
-					"foldername": {
-						"type": "string",
-						"defaultValue": "loaddata"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
-				"[concat(variables('factoryId'), '/pipelines/Incremental_Data_Load_1')]"
 			]
 		}
 	]
