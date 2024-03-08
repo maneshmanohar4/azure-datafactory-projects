@@ -1173,6 +1173,235 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Selecting_Latest_Edited_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "File List",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "LatestEditedFile",
+								"type": "DatasetReference",
+								"parameters": {
+									"containername": {
+										"value": "@pipeline().globalParameters.containername",
+										"type": "Expression"
+									},
+									"foldername": {
+										"value": "@pipeline().parameters.foldername",
+										"type": "Expression"
+									},
+									"filename": "*"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "File Iterator",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "File List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('File List').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "FileName and LastModified",
+									"type": "GetMetadata",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "LatestEditedFile",
+											"type": "DatasetReference",
+											"parameters": {
+												"containername": {
+													"value": "@pipeline().globalParameters.containername",
+													"type": "Expression"
+												},
+												"foldername": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"itemName",
+											"lastModified"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										},
+										"formatSettings": {
+											"type": "DelimitedTextReadSettings"
+										}
+									}
+								},
+								{
+									"name": "Latest Timestamp Check",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "FileName and LastModified",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@greater(activity('FileName and LastModified').output.lastModified,variables('lastModified'))",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Set LastModified",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "lastModified",
+													"value": {
+														"value": "@activity('FileName and LastModified').output.lastModified",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "Set ItemName",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Set LastModified",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "itemName",
+													"value": {
+														"value": "@activity('FileName and LastModified').output.itemName",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Final Result",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "File Iterator",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FinalResult",
+							"value": {
+								"value": "@concat(variables('itemName'),'---',variables('lastModified'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"foldername": {
+						"type": "string",
+						"defaultValue": "latesteditedfile"
+					}
+				},
+				"variables": {
+					"lastModified": {
+						"type": "String",
+						"defaultValue": "1999-03-01T07:14:31Z"
+					},
+					"itemName": {
+						"type": "String",
+						"defaultValue": "csv"
+					},
+					"FinalResult": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/LatestEditedFile')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Simple_Load_CSV_to_Table')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1387,6 +1616,55 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LatestEditedFile')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "azuredatastore",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"containername": {
+						"type": "string"
+					},
+					"foldername": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().foldername",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().containername",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/azuredatastore')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/azuredatastore')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1456,63 +1734,14 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/LatestEditedFile')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "azuredatastore",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"containername": {
-						"type": "string"
-					},
-					"foldername": {
-						"type": "string"
-					},
-					"filename": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().filename",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().foldername",
-							"type": "Expression"
-						},
-						"fileSystem": {
-							"value": "@dataset().containername",
-							"type": "Expression"
-						}
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/azuredatastore')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Selecting_Latest_Edited_File')]",
+			"name": "[concat(parameters('factoryName'), '/Data_Load_to_Databricks_MERGE')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "File List",
-						"type": "GetMetadata",
+						"name": "Fetching Metadata",
+						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -1523,39 +1752,30 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
 							"dataset": {
-								"referenceName": "LatestEditedFile",
+								"referenceName": "Bikestore_dataset",
 								"type": "DatasetReference",
 								"parameters": {
-									"containername": {
-										"value": "@pipeline().globalParameters.containername",
+									"tablename": {
+										"value": "@pipeline().parameters.metadata_table",
 										"type": "Expression"
-									},
-									"foldername": {
-										"value": "@pipeline().parameters.foldername",
-										"type": "Expression"
-									},
-									"filename": "*"
+									}
 								}
 							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
+							"firstRowOnly": false
 						}
 					},
 					{
-						"name": "File Iterator",
-						"type": "ForEach",
+						"name": "Filtering Enabled Tables",
+						"type": "Filter",
 						"dependsOn": [
 							{
-								"activity": "File List",
+								"activity": "Fetching Metadata",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -1564,142 +1784,80 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('File List').output.childItems",
+								"value": "@activity('Fetching Metadata').output.value",
 								"type": "Expression"
 							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "FileName and LastModified",
-									"type": "GetMetadata",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "LatestEditedFile",
-											"type": "DatasetReference",
-											"parameters": {
-												"containername": {
-													"value": "@pipeline().globalParameters.containername",
-													"type": "Expression"
-												},
-												"foldername": {
-													"value": "@pipeline().parameters.foldername",
-													"type": "Expression"
-												},
-												"filename": {
-													"value": "@item().name",
-													"type": "Expression"
-												}
-											}
-										},
-										"fieldList": [
-											"itemName",
-											"lastModified"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"enablePartitionDiscovery": false
-										},
-										"formatSettings": {
-											"type": "DelimitedTextReadSettings"
-										}
-									}
-								},
-								{
-									"name": "Latest Timestamp Check",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "FileName and LastModified",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@greater(activity('FileName and LastModified').output.lastModified,variables('lastModified'))",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "Set LastModified",
-												"type": "SetVariable",
-												"dependsOn": [],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "lastModified",
-													"value": {
-														"value": "@activity('FileName and LastModified').output.lastModified",
-														"type": "Expression"
-													}
-												}
-											},
-											{
-												"name": "Set ItemName",
-												"type": "SetVariable",
-												"dependsOn": [
-													{
-														"activity": "Set LastModified",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "itemName",
-													"value": {
-														"value": "@activity('FileName and LastModified').output.itemName",
-														"type": "Expression"
-													}
-												}
-											}
-										]
-									}
-								}
-							]
+							"condition": {
+								"value": "@equals(item().is_enabled,1)",
+								"type": "Expression"
+							}
 						}
 					},
 					{
-						"name": "Final Result",
-						"type": "SetVariable",
+						"name": "Foreach Enabled File",
+						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "File Iterator",
+								"activity": "Filtering Enabled Tables",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							}
 						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "FinalResult",
-							"value": {
-								"value": "@concat(variables('itemName'),'---',variables('lastModified'))",
+							"items": {
+								"value": "@activity('Filtering Enabled Tables').output.value",
 								"type": "Expression"
-							}
+							},
+							"activities": [
+								{
+									"name": "Multi File Incremental Loader",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Data_Load_to_Databricks_MERGE_1",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"filetype": {
+												"value": "@item().filetype",
+												"type": "Expression"
+											},
+											"filename": {
+												"value": "@item().filename",
+												"type": "Expression"
+											},
+											"foldername": {
+												"value": "@pipeline().parameters.foldername",
+												"type": "Expression"
+											},
+											"sequence": {
+												"value": "@item().sequence",
+												"type": "Expression"
+											},
+											"table_id": {
+												"value": "@item().table_id",
+												"type": "Expression"
+											},
+											"keycol": {
+												"value": "@item().keycol",
+												"type": "Expression"
+											},
+											"columnlist": {
+												"value": "@item().columnlist",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
 						}
 					}
 				],
@@ -1707,28 +1865,142 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
+					"metadata_table": {
+						"type": "string",
+						"defaultValue": "metadata_details"
+					},
 					"foldername": {
 						"type": "string",
-						"defaultValue": "latesteditedfile"
-					}
-				},
-				"variables": {
-					"lastModified": {
-						"type": "String",
-						"defaultValue": "1999-03-01T07:14:31Z"
-					},
-					"itemName": {
-						"type": "String",
-						"defaultValue": "csv"
-					},
-					"FinalResult": {
-						"type": "String"
+						"defaultValue": "loaddata"
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/LatestEditedFile')]"
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
+				"[concat(variables('factoryId'), '/pipelines/Data_Load_to_Databricks_MERGE_1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Data_Load_to_Databricks_MERGE_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Update Sequence",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Data Load Notebook",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "onpremssqlerver",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Data Load Notebook",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/maneshmanohar4@gmail.com/azure-databricks-projects/main_script_MERGE",
+							"baseParameters": {
+								"containername": {
+									"value": "@pipeline().globalParameters.containername",
+									"type": "Expression"
+								},
+								"storageaccount": {
+									"value": "@pipeline().globalParameters.storageaccount",
+									"type": "Expression"
+								},
+								"filename": {
+									"value": "@concat(pipeline().parameters.foldername,'/',pipeline().parameters.filename,'.',pipeline().parameters.filetype)",
+									"type": "Expression"
+								},
+								"tablename": {
+									"value": "@pipeline().parameters.filename",
+									"type": "Expression"
+								},
+								"keycol": {
+									"value": "@pipeline().parameters.keycol",
+									"type": "Expression"
+								},
+								"columnlist": {
+									"value": "@pipeline().parameters.columnlist",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"filetype": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					},
+					"foldername": {
+						"type": "string"
+					},
+					"sequence": {
+						"type": "int"
+					},
+					"table_id": {
+						"type": "int"
+					},
+					"keycol": {
+						"type": "string"
+					},
+					"columnlist": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]",
+				"[concat(variables('factoryId'), '/linkedServices/databricks')]"
 			]
 		}
 	]
