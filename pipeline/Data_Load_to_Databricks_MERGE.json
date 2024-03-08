@@ -131,7 +131,7 @@
 			},
 			"foldername": {
 				"type": "string",
-				"defaultValue": "loaddata"
+				"defaultValue": "incrementalload"
 			}
 		},
 		"annotations": []
