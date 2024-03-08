@@ -62,7 +62,7 @@
 							"type": "Expression"
 						},
 						"filename": {
-							"value": "@concat(pipeline().parameters.foldername,'/',pipeline().parameters.filename,'.',pipeline().parameters.filetype)",
+							"value": "@concat(pipeline().parameters.foldername,'/',pipeline().parameters.filename,'_',string(pipeline().parameters.sequence),'.',pipeline().parameters.filetype)",
 							"type": "Expression"
 						},
 						"tablename": {
