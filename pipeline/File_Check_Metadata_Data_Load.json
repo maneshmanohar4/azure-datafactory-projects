@@ -106,7 +106,8 @@
 									}
 								},
 								"fieldList": [
-									"exists"
+									"exists",
+									"itemName"
 								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
@@ -114,6 +115,47 @@
 								},
 								"formatSettings": {
 									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "File Check Pipeline",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "File Check",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "File_Check_Metadata_Data_Load_1",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"filename": {
+										"value": "@activity('File Check').output.itemName",
+										"type": "Expression"
+									},
+									"foldername": {
+										"value": "@pipeline().parameters.foldername",
+										"type": "Expression"
+									},
+									"existflag": {
+										"value": "@activity('File Check').output.exists",
+										"type": "Expression"
+									},
+									"tablename": {
+										"value": "@item().tablename",
+										"type": "Expression"
+									}
 								}
 							}
 						}
