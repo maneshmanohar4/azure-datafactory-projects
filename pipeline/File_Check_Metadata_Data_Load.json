@@ -75,8 +75,8 @@
 					},
 					"activities": [
 						{
-							"name": "Load Data",
-							"type": "Copy",
+							"name": "File Check",
+							"type": "GetMetadata",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
@@ -87,34 +87,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"sink": {
-									"type": "SqlServerSink",
-									"writeBehavior": "insert",
-									"sqlWriterUseTableLock": false
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
+								"dataset": {
 									"referenceName": "DatalakeCSV",
 									"type": "DatasetReference",
 									"parameters": {
@@ -131,20 +104,18 @@
 											"type": "Expression"
 										}
 									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
 								}
-							],
-							"outputs": [
-								{
-									"referenceName": "Bikestore_dataset",
-									"type": "DatasetReference",
-									"parameters": {
-										"tablename": {
-											"value": "@item().filename",
-											"type": "Expression"
-										}
-									}
-								}
-							]
+							}
 						}
 					]
 				}
