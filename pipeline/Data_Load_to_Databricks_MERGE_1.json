@@ -5,8 +5,6 @@
 			{
 				"name": "Update Sequence",
 				"type": "Script",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Set variable1",
@@ -80,10 +78,6 @@
 							"type": "Expression"
 						}
 					}
-				},
-				"linkedServiceName": {
-					"referenceName": "databricks",
-					"type": "LinkedServiceReference"
 				}
 			},
 			{
