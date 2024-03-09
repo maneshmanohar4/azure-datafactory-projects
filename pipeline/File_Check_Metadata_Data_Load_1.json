@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(pipeline().parameters.existflag,'true')",
+						"value": "@equals(pipeline().parameters.existflag,true)",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
