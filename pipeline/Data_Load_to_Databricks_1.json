@@ -34,6 +34,10 @@
 							"type": "Expression"
 						}
 					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
