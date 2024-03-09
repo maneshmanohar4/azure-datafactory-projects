@@ -5,9 +5,11 @@
 			{
 				"name": "Update Sequence",
 				"type": "Script",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
-						"activity": "Data Load Notebook",
+						"activity": "Set variable1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -83,6 +85,30 @@
 					"referenceName": "databricks",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Data Load Notebook",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "fileflag",
+					"value": {
+						"value": "@activity('Data Load Notebook').output.pipelineReturnValue",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -106,6 +132,11 @@
 			},
 			"columnlist": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"fileflag": {
+				"type": "Boolean"
 			}
 		},
 		"annotations": []
