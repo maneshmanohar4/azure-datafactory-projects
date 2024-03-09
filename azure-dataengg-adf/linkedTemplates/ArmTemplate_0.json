@@ -7,13 +7,13 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "azure-dataengg-adf"
 		},
+		"AzureDatabricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks'"
+		},
 		"azuredatastore_accountKey": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'azuredatastore'"
-		},
-		"databricks_accessToken": {
-			"type": "secureString",
-			"metadata": "Secure string for 'accessToken' of 'databricks'"
 		},
 		"onpremssqlerver_connectionString": {
 			"type": "secureString",
@@ -24,13 +24,13 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'onpremssqlerver'"
 		},
+		"AzureDatabricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0309-113131-8m1s2wwc"
+		},
 		"azuredatastore_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dataenggstore.dfs.core.windows.net/"
-		},
-		"databricks_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "0224-053152-7u3xf8fe"
 		},
 		"onpremssqlerver_properties_typeProperties_userName": {
 			"type": "string",
@@ -41,6 +41,24 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-6135691623039698.18.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricks_accessToken')]"
+					},
+					"existingClusterId": "[parameters('AzureDatabricks_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/azuredatastore')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -54,24 +72,6 @@
 						"type": "SecureString",
 						"value": "[parameters('azuredatastore_accountKey')]"
 					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/databricks')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricks",
-				"typeProperties": {
-					"domain": "https://adb-1661961612796027.7.azuredatabricks.net",
-					"accessToken": {
-						"type": "SecureString",
-						"value": "[parameters('databricks_accessToken')]"
-					},
-					"existingClusterId": "[parameters('databricks_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": []
@@ -126,7 +126,7 @@
 							}
 						},
 						"linkedServiceName": {
-							"referenceName": "databricks",
+							"referenceName": "AzureDatabricks",
 							"type": "LinkedServiceReference"
 						}
 					}
@@ -154,7 +154,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/databricks')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]"
 			]
 		},
 		{
@@ -319,42 +319,6 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Update Sequence",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "Data Load Notebook",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "onpremssqlerver",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "Query",
-									"text": {
-										"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
-										"type": "Expression"
-									}
-								}
-							],
-							"scriptBlockExecutionTimeout": "02:00:00"
-						}
-					},
-					{
 						"name": "Data Load Notebook",
 						"type": "DatabricksNotebook",
 						"dependsOn": [],
@@ -396,8 +360,82 @@
 							}
 						},
 						"linkedServiceName": {
-							"referenceName": "databricks",
+							"referenceName": "AzureDatabricks",
 							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Data Load Notebook",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "fileflag",
+							"value": {
+								"value": "@activity('Data Load Notebook').output.runOutput",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Set variable1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(variables('fileflag'),'True')",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Update Sequence",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "onpremssqlerver",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "@concat('update metadata_details set sequence=sequence+1 where table_id=''',string(pipeline().parameters.table_id),'''')",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
 						}
 					}
 				],
@@ -427,11 +465,16 @@
 						"type": "string"
 					}
 				},
+				"variables": {
+					"fileflag": {
+						"type": "Boolean"
+					}
+				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]",
-				"[concat(variables('factoryId'), '/linkedServices/databricks')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
+				"[concat(variables('factoryId'), '/linkedServices/onpremssqlerver')]"
 			]
 		},
 		{

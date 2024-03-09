@@ -5,10 +5,10 @@
 		"factoryName": {
 			"value": "azure-dataengg-adf"
 		},
-		"azuredatastore_accountKey": {
+		"AzureDatabricks_accessToken": {
 			"value": ""
 		},
-		"databricks_accessToken": {
+		"azuredatastore_accountKey": {
 			"value": ""
 		},
 		"onpremssqlerver_connectionString": {
@@ -17,11 +17,11 @@
 		"onpremssqlerver_password": {
 			"value": ""
 		},
+		"AzureDatabricks_properties_typeProperties_existingClusterId": {
+			"value": "0309-113131-8m1s2wwc"
+		},
 		"azuredatastore_properties_typeProperties_url": {
 			"value": "https://dataenggstore.dfs.core.windows.net/"
-		},
-		"databricks_properties_typeProperties_existingClusterId": {
-			"value": "0224-053152-7u3xf8fe"
 		},
 		"onpremssqlerver_properties_typeProperties_userName": {
 			"value": "MANESH-BOOK3-PR\\manes"

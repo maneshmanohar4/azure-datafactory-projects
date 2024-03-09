@@ -7,13 +7,13 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "azure-dataengg-adf"
 		},
+		"AzureDatabricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks'"
+		},
 		"azuredatastore_accountKey": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'azuredatastore'"
-		},
-		"databricks_accessToken": {
-			"type": "secureString",
-			"metadata": "Secure string for 'accessToken' of 'databricks'"
 		},
 		"onpremssqlerver_connectionString": {
 			"type": "secureString",
@@ -24,13 +24,13 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'onpremssqlerver'"
 		},
+		"AzureDatabricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0309-113131-8m1s2wwc"
+		},
 		"azuredatastore_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dataenggstore.dfs.core.windows.net/"
-		},
-		"databricks_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "0224-053152-7u3xf8fe"
 		},
 		"onpremssqlerver_properties_typeProperties_userName": {
 			"type": "string",
@@ -63,11 +63,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureDatabricks_accessToken": {
+						"value": "[parameters('AzureDatabricks_accessToken')]"
+					},
 					"azuredatastore_accountKey": {
 						"value": "[parameters('azuredatastore_accountKey')]"
-					},
-					"databricks_accessToken": {
-						"value": "[parameters('databricks_accessToken')]"
 					},
 					"onpremssqlerver_connectionString": {
 						"value": "[parameters('onpremssqlerver_connectionString')]"
@@ -75,11 +75,11 @@
 					"onpremssqlerver_password": {
 						"value": "[parameters('onpremssqlerver_password')]"
 					},
+					"AzureDatabricks_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('AzureDatabricks_properties_typeProperties_existingClusterId')]"
+					},
 					"azuredatastore_properties_typeProperties_url": {
 						"value": "[parameters('azuredatastore_properties_typeProperties_url')]"
-					},
-					"databricks_properties_typeProperties_existingClusterId": {
-						"value": "[parameters('databricks_properties_typeProperties_existingClusterId')]"
 					},
 					"onpremssqlerver_properties_typeProperties_userName": {
 						"value": "[parameters('onpremssqlerver_properties_typeProperties_userName')]"
