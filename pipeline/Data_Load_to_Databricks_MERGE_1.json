@@ -151,6 +151,9 @@
 				"type": "String"
 			}
 		},
+		"folder": {
+			"name": "Databricks Data Load"
+		},
 		"annotations": []
 	}
 }

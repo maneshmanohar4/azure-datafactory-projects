@@ -224,6 +224,9 @@
 				"type": "int"
 			}
 		},
+		"folder": {
+			"name": "Incremental"
+		},
 		"annotations": []
 	}
 }

@@ -126,6 +126,9 @@
 				"defaultValue": "loaddata"
 			}
 		},
+		"folder": {
+			"name": "Incremental"
+		},
 		"annotations": []
 	}
 }

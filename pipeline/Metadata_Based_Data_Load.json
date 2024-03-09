@@ -160,6 +160,9 @@
 				"defaultValue": "loaddata"
 			}
 		},
+		"folder": {
+			"name": "Simple Data Load"
+		},
 		"annotations": []
 	}
 }

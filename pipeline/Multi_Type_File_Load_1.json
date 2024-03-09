@@ -182,6 +182,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "Simple Data Load"
+		},
 		"annotations": []
 	}
 }

@@ -58,6 +58,9 @@
 				"type": "int"
 			}
 		},
+		"folder": {
+			"name": "Databricks Data Load"
+		},
 		"annotations": []
 	}
 }

@@ -126,6 +126,9 @@
 				"defaultValue": "loaddata"
 			}
 		},
+		"folder": {
+			"name": "Databricks Data Load"
+		},
 		"annotations": []
 	}
 }
