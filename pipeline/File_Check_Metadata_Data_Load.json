@@ -73,6 +73,7 @@
 						"value": "@activity('Filtering Enabled Tables').output.value",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "File Check",
@@ -141,7 +142,7 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"filename": {
-										"value": "@activity('File Check').output.itemName",
+										"value": "@concat(item().filename,'.csv')",
 										"type": "Expression"
 									},
 									"foldername": {
