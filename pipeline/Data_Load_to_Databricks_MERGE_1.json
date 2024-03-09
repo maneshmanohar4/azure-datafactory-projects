@@ -148,7 +148,7 @@
 		},
 		"variables": {
 			"fileflag": {
-				"type": "Boolean"
+				"type": "String"
 			}
 		},
 		"annotations": []
