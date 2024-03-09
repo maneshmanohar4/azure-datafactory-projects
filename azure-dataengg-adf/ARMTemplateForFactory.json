@@ -174,6 +174,9 @@
 						"defaultValue": "loaddata"
 					}
 				},
+				"folder": {
+					"name": "Databricks Data Load"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -245,6 +248,9 @@
 					"table_id": {
 						"type": "int"
 					}
+				},
+				"folder": {
+					"name": "Databricks Data Load"
 				},
 				"annotations": []
 			},
@@ -393,6 +399,9 @@
 						"type": "string",
 						"defaultValue": "incrementalload"
 					}
+				},
+				"folder": {
+					"name": "Databricks Data Load"
 				},
 				"annotations": []
 			},
@@ -559,6 +568,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Databricks Data Load"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -698,6 +710,9 @@
 						"type": "string",
 						"defaultValue": "loaddata"
 					}
+				},
+				"folder": {
+					"name": "Incremental"
 				},
 				"annotations": []
 			},
@@ -937,6 +952,9 @@
 						"type": "int"
 					}
 				},
+				"folder": {
+					"name": "Incremental"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -1113,6 +1131,9 @@
 						"defaultValue": "loaddata"
 					}
 				},
+				"folder": {
+					"name": "Simple Data Load"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -1197,6 +1218,7 @@
 								"value": "@activity('Filtering Enabled Tables').output.value",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"activities": [
 								{
 									"name": "Multi File Loader",
@@ -1244,6 +1266,9 @@
 						"type": "string",
 						"defaultValue": "loaddata"
 					}
+				},
+				"folder": {
+					"name": "Simple Data Load"
 				},
 				"annotations": []
 			},
@@ -1440,6 +1465,9 @@
 					"foldername": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "Simple Data Load"
 				},
 				"annotations": []
 			},
@@ -1672,6 +1700,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "Others"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -1773,6 +1804,9 @@
 						"type": "string",
 						"defaultValue": "loaddata"
 					}
+				},
+				"folder": {
+					"name": "Simple Data Load"
 				},
 				"annotations": []
 			},
@@ -2009,6 +2043,183 @@
 				"typeProperties": {}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/File_Check_Metadata_Data_Load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fetching Metadata",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "Bikestore_dataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"tablename": {
+										"value": "@pipeline().parameters.metadata_table",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filtering Enabled Tables",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Fetching Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Fetching Metadata').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().is_enabled,1)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Foreach Enabled File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filtering Enabled Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filtering Enabled Tables').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Load Data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "SqlServerSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DatalakeCSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"containername": {
+													"value": "@pipeline().globalParameters.containername",
+													"type": "Expression"
+												},
+												"foldername": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@concat(item().filename,'.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Bikestore_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"tablename": {
+													"value": "@item().filename",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadata_table": {
+						"type": "string",
+						"defaultValue": "metadata_details"
+					},
+					"foldername": {
+						"type": "string",
+						"defaultValue": "loaddata"
+					}
+				},
+				"folder": {
+					"name": "Simple Data Load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]"
+			]
 		}
 	]
 }
