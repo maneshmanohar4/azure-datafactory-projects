@@ -467,7 +467,7 @@
 				},
 				"variables": {
 					"fileflag": {
-						"type": "Boolean"
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -952,6 +952,7 @@
 								"value": "@activity('Filtering Enabled Tables').output.value",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"activities": [
 								{
 									"name": "Multi File Incremental Loader",
