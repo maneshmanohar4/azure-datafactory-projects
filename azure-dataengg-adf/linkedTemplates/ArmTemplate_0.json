@@ -1766,85 +1766,24 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/File_Check_Metadata_Data_Load')]",
+			"name": "[concat(parameters('factoryName'), '/File_Check_Metadata_Data_Load_1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Fetching Metadata",
-						"type": "Lookup",
+						"name": "File Check Condition",
+						"type": "IfCondition",
 						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
 						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "Bikestore_dataset",
-								"type": "DatasetReference",
-								"parameters": {
-									"tablename": {
-										"value": "@pipeline().parameters.metadata_table",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "Filtering Enabled Tables",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "Fetching Metadata",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Fetching Metadata').output.value",
+							"expression": {
+								"value": "@equals(pipeline().parameters.existflag,true)",
 								"type": "Expression"
 							},
-							"condition": {
-								"value": "@equals(item().is_enabled,1)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Foreach Enabled File",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Filtering Enabled Tables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Filtering Enabled Tables').output.value",
-								"type": "Expression"
-							},
-							"activities": [
+							"ifTrueActivities": [
 								{
-									"name": "Load Data",
+									"name": "Data Load",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -1896,7 +1835,7 @@
 													"type": "Expression"
 												},
 												"filename": {
-													"value": "@concat(item().filename,'.csv')",
+													"value": "@pipeline().parameters.filename",
 													"type": "Expression"
 												}
 											}
@@ -1908,7 +1847,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"tablename": {
-													"value": "@item().filename",
+													"value": "@pipeline().parameters.tablename",
 													"type": "Expression"
 												}
 											}
@@ -1923,13 +1862,18 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"metadata_table": {
-						"type": "string",
-						"defaultValue": "metadata_details"
+					"filename": {
+						"type": "string"
 					},
 					"foldername": {
 						"type": "string",
 						"defaultValue": "loaddata"
+					},
+					"existflag": {
+						"type": "string"
+					},
+					"tablename": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -1938,8 +1882,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]"
+				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]",
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]"
 			]
 		},
 		{

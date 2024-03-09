@@ -2121,9 +2121,140 @@
 								"value": "@activity('Filtering Enabled Tables').output.value",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"activities": [
 								{
-									"name": "Load Data",
+									"name": "File Check",
+									"type": "GetMetadata",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "DatalakeCSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"containername": {
+													"value": "@pipeline().globalParameters.containername",
+													"type": "Expression"
+												},
+												"foldername": {
+													"value": "@pipeline().parameters.foldername",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@concat(item().filename,'.csv')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists",
+											"itemName"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"enablePartitionDiscovery": false
+										},
+										"formatSettings": {
+											"type": "DelimitedTextReadSettings"
+										}
+									}
+								},
+								{
+									"name": "File Check Pipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "File Check",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "File_Check_Metadata_Data_Load_1",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"filename": {
+												"value": "@concat(item().filename,'.csv')",
+												"type": "Expression"
+											},
+											"foldername": {
+												"value": "@pipeline().parameters.foldername",
+												"type": "Expression"
+											},
+											"existflag": {
+												"value": "@activity('File Check').output.exists",
+												"type": "Expression"
+											},
+											"tablename": {
+												"value": "@item().tablename",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"metadata_table": {
+						"type": "string",
+						"defaultValue": "metadata_details"
+					},
+					"foldername": {
+						"type": "string",
+						"defaultValue": "loaddata"
+					}
+				},
+				"folder": {
+					"name": "Simple Data Load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]",
+				"[concat(variables('factoryId'), '/pipelines/File_Check_Metadata_Data_Load_1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/File_Check_Metadata_Data_Load_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "File Check Condition",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.existflag,true)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Data Load",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -2175,7 +2306,7 @@
 													"type": "Expression"
 												},
 												"filename": {
-													"value": "@concat(item().filename,'.csv')",
+													"value": "@pipeline().parameters.filename",
 													"type": "Expression"
 												}
 											}
@@ -2187,7 +2318,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"tablename": {
-													"value": "@item().filename",
+													"value": "@pipeline().parameters.tablename",
 													"type": "Expression"
 												}
 											}
@@ -2202,13 +2333,18 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"metadata_table": {
-						"type": "string",
-						"defaultValue": "metadata_details"
+					"filename": {
+						"type": "string"
 					},
 					"foldername": {
 						"type": "string",
 						"defaultValue": "loaddata"
+					},
+					"existflag": {
+						"type": "string"
+					},
+					"tablename": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -2217,8 +2353,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]"
+				"[concat(variables('factoryId'), '/datasets/DatalakeCSV')]",
+				"[concat(variables('factoryId'), '/datasets/Bikestore_dataset')]"
 			]
 		}
 	]
