@@ -1,0 +1,9 @@
+{
+	"name": "dev-adf-test-per",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f5176319-53f9-49a5-8977-779d4c0db44f",
+		"tenantId": "520f60a9-b935-41ea-bd6d-8db6fde5034a"
+	}
+}
