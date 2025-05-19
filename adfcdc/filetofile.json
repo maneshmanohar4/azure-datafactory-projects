@@ -143,7 +143,7 @@
 			{
 				"TargetEntities": [
 					{
-						"name": "datahub/test_parq",
+						"name": "datahub",
 						"properties": {
 							"schema": [],
 							"dslConnectorProperties": [
@@ -154,10 +154,6 @@
 								{
 									"name": "fileSystem",
 									"value": "datahub"
-								},
-								{
-									"name": "folderPath",
-									"value": "test_parq"
 								}
 							]
 						}
@@ -188,7 +184,7 @@
 				},
 				"DataMapperMappings": [
 					{
-						"targetEntityName": "datahub/test_parq",
+						"targetEntityName": "datahub",
 						"sourceEntityName": "datahub/test_files",
 						"sourceConnectionReference": {
 							"connectionName": "AzureDataLakeStorage1",
