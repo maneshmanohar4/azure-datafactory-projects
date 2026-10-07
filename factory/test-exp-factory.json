@@ -1,0 +1,15 @@
+{
+	"name": "test-exp-factory",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "southindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "28d249d7-98cc-4152-92c1-3e2bcd9b2697",
+		"tenantId": "da26582a-569b-4ab2-b6ea-6d7f8e483553"
+	}
+}
