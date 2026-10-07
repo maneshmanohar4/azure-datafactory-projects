@@ -26,10 +26,6 @@
 					}
 				],
 				"Connection": {
-					"linkedService": {
-						"referenceName": "AzureDataLakeStorage1",
-						"type": "LinkedServiceReference"
-					},
 					"linkedServiceType": "AzureBlobFS",
 					"type": "linkedservicetype",
 					"isInlineDataset": true,
@@ -164,10 +160,6 @@
 					}
 				],
 				"Connection": {
-					"linkedService": {
-						"referenceName": "AzureDataLakeStorage1",
-						"type": "LinkedServiceReference"
-					},
 					"linkedServiceType": "AzureBlobFS",
 					"type": "linkedservicetype",
 					"isInlineDataset": true,
