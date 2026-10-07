@@ -1,6 +1,9 @@
 {
 	"name": "test-exp-factory",
 	"properties": {
+		"globalConfigurations": {
+			"PolicyValidationEnabled": "true"
+		},
 		"trustModeClaimForMi": {
 			"value": "Disabled",
 			"editable": true
