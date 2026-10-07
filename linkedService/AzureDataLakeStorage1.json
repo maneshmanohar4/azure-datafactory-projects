@@ -1,12 +1,6 @@
 {
 	"name": "AzureDataLakeStorage1",
 	"properties": {
-		"parameters": {
-			"stgaccount": {
-				"type": "String",
-				"defaultValue": "https://testexpstorageacc.dfs.core.windows.net/"
-			}
-		},
 		"annotations": [],
 		"type": "AzureBlobFS",
 		"typeProperties": {
