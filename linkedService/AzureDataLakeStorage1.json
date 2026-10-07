@@ -5,9 +5,13 @@
 		"type": "AzureBlobFS",
 		"typeProperties": {
 			"url": "https://testexpstorageacc.dfs.core.windows.net/",
-			"credential": {
-				"referenceName": "credential1",
-				"type": "CredentialReference"
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault1",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "stgacckey"
 			}
 		}
 	}
