@@ -51,7 +51,6 @@
 						"value": "@activity('Get Metadata1').output.childItems",
 						"type": "Expression"
 					},
-					"batchCount": 2,
 					"activities": [
 						{
 							"name": "Get Metadata2",
@@ -116,7 +115,7 @@
 								"sink": {
 									"type": "AzureSqlSink",
 									"writeBehavior": "insert",
-									"sqlWriterUseTableLock": false,
+									"sqlWriterUseTableLock": true,
 									"tableOption": "autoCreate",
 									"disableMetricsCollection": false
 								},
