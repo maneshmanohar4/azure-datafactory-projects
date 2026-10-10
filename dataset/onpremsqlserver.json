@@ -1,6 +1,14 @@
 {
 	"name": "onpremsqlserver",
 	"properties": {
+		"parameters": {
+			"schema": {
+				"type": "string"
+			},
+			"table": {
+				"type": "string"
+			}
+		},
 		"annotations": [],
 		"type": "SqlServerTable",
 		"schema": [
@@ -15,8 +23,14 @@
 			}
 		],
 		"typeProperties": {
-			"schema": "dbo",
-			"table": "employee"
+			"schema": {
+				"value": "@dataset().schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().table",
+				"type": "Expression"
+			}
 		}
 	}
 }
