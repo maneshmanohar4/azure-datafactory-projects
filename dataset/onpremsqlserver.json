@@ -1,6 +1,10 @@
 {
 	"name": "onpremsqlserver",
 	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer1onprem",
+			"type": "LinkedServiceReference"
+		},
 		"parameters": {
 			"schema": {
 				"type": "string"
