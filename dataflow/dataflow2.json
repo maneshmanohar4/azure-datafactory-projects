@@ -57,7 +57,7 @@
 				"     schemaName: 'dbo',",
 				"     tableName: 'Product',",
 				"     isolationLevel: 'NONE') ~> source1",
-				"source1 sink(allowSchemaDrift: false,",
+				"source1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          ProductID as string,",
