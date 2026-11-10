@@ -1,0 +1,10 @@
+{
+	"name": "mainstoragedev",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://mainstoragedev.dfs.core.windows.net/"
+		}
+	}
+}
