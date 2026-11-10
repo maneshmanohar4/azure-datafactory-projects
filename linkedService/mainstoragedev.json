@@ -4,7 +4,11 @@
 		"annotations": [],
 		"type": "AzureBlobFS",
 		"typeProperties": {
-			"url": "https://mainstoragedev.dfs.core.windows.net/"
+			"url": "https://mainstoragedev.dfs.core.windows.net/",
+			"credential": {
+				"referenceName": "adfcred",
+				"type": "CredentialReference"
+			}
 		}
 	}
 }
