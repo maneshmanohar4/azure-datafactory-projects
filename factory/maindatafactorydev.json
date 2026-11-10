@@ -1,0 +1,21 @@
+{
+	"name": "maindatafactorydev",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned,UserAssigned",
+		"principalId": "2c3ab4b4-fbc7-435d-9588-5de1722909eb",
+		"tenantId": "eb6b5e31-8608-4f9a-b60f-d215f37da1fa",
+		"userAssignedIdentities": {
+			"/subscriptions/a2fde2f2-6880-476c-83f9-598426046498/resourcegroups/rg-main-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/az-main-key": {
+				"clientId": "671a5cce-e646-40eb-8660-8e3ac42e2189",
+				"principalId": "63403280-fb4b-4768-8406-d34f3fbd65e0"
+			}
+		}
+	}
+}
