@@ -1,0 +1,18 @@
+{
+	"name": "azuredatabase",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "main-sqlserver-dev.database.windows.net",
+			"database": "mainbasedev",
+			"encrypt": "mandatory",
+			"trustServerCertificate": true,
+			"authenticationType": "UserAssignedManagedIdentity",
+			"credential": {
+				"referenceName": "adfcred",
+				"type": "CredentialReference"
+			}
+		}
+	}
+}
