@@ -11,7 +11,11 @@
 			"trustServerCertificate": true,
 			"authenticationType": "SQL",
 			"userName": "manesh",
-			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJjODliMWY1My1lYWY4LTRhODUtYmE5Mi01NTFkM2IxNzQzYWUiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJiZTZhZDU1Yi0zZDc5LTQzOGUtYjE0Zi0yNjNkYTI3OGE5N2EiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "onpremintegrationRuntime",
+			"type": "IntegrationRuntimeReference"
 		}
 	}
 }
